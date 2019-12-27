@@ -78,8 +78,11 @@ ErrorCode trajectory_replay::run(void)
         std::cout << "\nTrajectory replay finished.\n" << std::endl;
         return E_SUCCESS;
     }
-    catch (...)
+    catch (rpc::rpc_error&  e)
     {
-
+        std::string msg = e.get_error().as<std::string>();
+        std::cout << "\n---------------------------------------------------------------\n";
+        std::cout << "\nException raised by the API, something went wrong.\n" << std::endl << msg << std::endl;
+        return E_API_EXCEPTION;
     }
 }
