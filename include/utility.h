@@ -4,6 +4,7 @@
 #include <fstream>
 #include <direct.h>
 #include <vector>
+#include <stdlib.h>
 #include "api/RpcLibClientBase.hpp"
 #include "common/common_utils/FileSystem.hpp"
 
