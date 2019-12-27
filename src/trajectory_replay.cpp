@@ -2,11 +2,12 @@
 
 
 
-trajectory_replay::trajectory_replay(std::string _path)
+trajectory_replay::trajectory_replay(std::string _path, int _sleeptime)
 {
     path = _path;
     ingFlag = true;
     utils = new utility();
+    sleeptime = _sleeptime;
 }
 
 trajectory_replay::~trajectory_replay()
@@ -40,17 +41,42 @@ ErrorCode trajectory_replay::run(void)
         std::cin.get();
 
         client.confirmConnection();
-        std::vector<ImageRequest> request = { ImageRequest("0", ImageType::Scene), ImageRequest("1", ImageType::Scene), ImageRequest("2", ImageType::Scene)};
-        const std::vector<ImageResponse>& response = client.simGetImages(request);
 
+        std::cout << "\nPress Enter to play trajectory.\n";
+        std::cin.get();
+
+        float tx, ty, tz, qw, qx, qy, qz;
+
+        while (trajFile.good())
+        {
+            printf_s("\nTrajectory playing...\n");
+
+            row = utils->csvReadRow(trajFile, ',');
+
+            if (row.empty())
+            {
+                ingFlag = false;
+                break;
+            }
+
+            tx = std::stof(row[0]);
+            ty = std::stof(row[1]);
+            tz = std::stof(row[2]);
+            qw = std::stof(row[3]);
+            qx = std::stof(row[4]);
+            qy = std::stof(row[5]);
+            qz = std::stof(row[6]);
+
+            Eigen::Vector3f position(tx, ty, tz);
+            Eigen::Quaternion<float, Eigen::DontAlign> quaternion(qz, qw, qx, qy);
+            cvPose = msr::airlib::Pose(position, quaternion);
+            client.simSetVehiclePose(cvPose, true);
+
+            Sleep(sleeptime);
+        }
         std::cout << "\n---------------------------------------------------------------\n";
-        
-        std::cout << "\nThe camera resolution is " << response.at(0).width << " x " << response.at(0).height << std::endl;
-        std::cout << "\nThe camera resolution is " << response.at(1).width << " x " << response.at(1).height << std::endl;
-        std::cout << "\nThe camera resolution is " << response.at(2).width << " x " << response.at(2).height << std::endl;
-        
-        //개발필요
-
+        std::cout << "\nTrajectory replay finished.\n" << std::endl;
+        return E_SUCCESS;
     }
     catch (...)
     {
